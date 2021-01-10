@@ -1,6 +1,6 @@
 use core::marker::PhantomData;
 
-use crate::pa::{port_0 as gpio, Port0};
+use crate::pa::{port_0 as gpio, port_0::Port0};
 use embedded_hal::digital::v2::OutputPin;
 use void::Void;
 
@@ -37,17 +37,11 @@ impl<MODE> Pin<MODE> {
     }
     #[inline]
     pub fn pin(&self) -> u8 {
-        #[cfg(not(any(feature = "52833", feature = "52840")))]
-        {
-            self.pin_port
-        }
+        self.pin_port
     }
     #[inline]
     pub fn port(&self) -> Port {
-        #[cfg(not(any(feature = "52833", feature = "52840")))]
-        {
-            Port::Port0
-        }
+        Port::Port0
     }
     fn block(&self) -> &gpio::RegisterBlock {
         let ptr = match self.port() {

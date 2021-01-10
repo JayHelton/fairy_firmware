@@ -1,4 +1,28 @@
 use crate::generics::{Readable, Reg, Writable};
+use core::{marker::PhantomData, ops::Deref};
+
+#[doc = "GPIO Port 1"]
+pub struct Port0 {
+    _marker: PhantomData<*const ()>,
+}
+unsafe impl Send for Port0 {}
+impl Port0 {
+    pub fn new() -> Self {
+        Self {
+            _marker: PhantomData,
+        }
+    }
+    pub const fn ptr() -> *const RegisterBlock {
+        0x5000_0000 as *const _
+    }
+}
+
+impl Deref for Port0 {
+    type Target = RegisterBlock;
+    fn deref(&self) -> &Self::Target {
+        unsafe { &*Port0::ptr() }
+    }
+}
 
 #[doc = r"Register block"]
 #[repr(C)]
