@@ -8,7 +8,7 @@ use hal::{self, peripherals::gpio::pins::Port0Pins, peripherals::gpio::Level};
 #[cortex_m_rt::entry]
 fn main() -> ! {
     defmt::info!("Hello, world!");
-    let board = hal::pa::Peripherals::take().unwrap();
+    let board = hal::peripherals::Peripherals::take().unwrap();
     let pins = Port0Pins::new(board.port_0);
     let mut led_1 = pins.p0_13.into_push_pull_output(Level::Low);
     let mut led_2 = pins.p0_3.into_push_pull_output(Level::High);
