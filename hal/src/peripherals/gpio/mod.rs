@@ -1,15 +1,20 @@
 use core::marker::PhantomData;
 
-use crate::pa::{port_0 as gpio, port_0::Port0};
-use embedded_hal::digital::v2::OutputPin;
+use crate::peripherals::{port_0 as gpio, port_0::Port0};
+use embedded_hal::digital::v2::{InputPin, OutputPin};
 use void::Void;
 
 pub struct Disconnected;
 pub struct Output<MODE> {
     _mode: PhantomData<MODE>,
 }
+pub struct Input<MODE> {
+    _mode: PhantomData<MODE>,
+}
+
 /// Push pull output (type state).
 pub struct PushPull;
+pub struct PullUp;
 /// Represents a digital input or output level.
 pub enum Level {
     Low,
@@ -53,6 +58,21 @@ impl<MODE> Pin<MODE> {
         &self.block().pin_cnf[self.pin() as usize]
     }
 
+    pub fn into_pullup_input(self) -> Pin<Input<PullUp>> {
+        self.block().pin_cnf[self.pin() as usize].write(|w| {
+            w.dir().input();
+            w.input().connect();
+            w.pull().pullup();
+            w.drive().s0s1();
+            w.sense().disabled();
+            w
+        });
+
+        Pin {
+            _mode: PhantomData,
+            pin_port: self.pin_port,
+        }
+    }
     /// Convert the pin to be a push-pull output with normal drive.
     pub fn into_push_pull_output(self, initial_output: Level) -> Pin<Output<PushPull>> {
         let mut pin = Pin {
@@ -83,6 +103,18 @@ impl<MODE> Pin<MODE> {
             _mode: PhantomData,
             pin_port: self.pin_port,
         }
+    }
+}
+
+impl<MODE> InputPin for Pin<Input<MODE>> {
+    type Error = Void;
+
+    fn is_high(&self) -> Result<bool, Self::Error> {
+        self.is_low().map(|v| !v)
+    }
+
+    fn is_low(&self) -> Result<bool, Self::Error> {
+        Ok(self.block().in_.read().bits() & (1 << self.pin()) == 0)
     }
 }
 
